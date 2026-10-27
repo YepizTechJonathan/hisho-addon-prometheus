@@ -1,0 +1,36 @@
+# Alerts Hisho shows (and pushes) from Prometheus. There is deliberately no "target down" rule:
+# a machine that is off is normal here (Souko travels, Ren parks, boxes go off for heat). Hisho
+# tells "off" from "on but not reporting" with its own heartbeats instead.
+groups:
+  - name: hisho
+    rules:
+      - alert: DiskAlmostFull
+        expr: |
+          100 * (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*"}
+                     / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*"}) > 90
+        for: 15m
+        labels: {severity: warn}
+        annotations:
+          summary: "{{ $labels.machine }}: {{ $labels.mountpoint }} is {{ $value | printf \"%.0f\" }}% full"
+      - alert: LowMemory
+        expr: 100 * node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 5
+        for: 15m
+        labels: {severity: warn}
+        annotations:
+          summary: "{{ $labels.machine }} has under 5% memory free"
+      - alert: HighTemperature
+        expr: |
+          max by (machine) (node_hwmon_temp_celsius * on (machine, chip) group_left (chip_name)
+            node_hwmon_chip_names{chip_name=~"k10temp|coretemp|zenpower|cpu_thermal"}) > 90
+        for: 10m
+        labels: {severity: warn}
+        annotations:
+          summary: "{{ $labels.machine }} CPU is at {{ $value | printf \"%.0f\" }}°C"
+      - alert: SSDHot
+        expr: |
+          max by (machine) (node_hwmon_temp_celsius * on (machine, chip) group_left (chip_name)
+            node_hwmon_chip_names{chip_name="nvme"}) > 75
+        for: 10m
+        labels: {severity: warn}
+        annotations:
+          summary: "{{ $labels.machine }} has an SSD at {{ $value | printf \"%.0f\" }}°C"

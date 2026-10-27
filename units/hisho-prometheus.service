@@ -1,0 +1,15 @@
+[Unit]
+Description=Prometheus (Hisho add-on; fleet machine metrics)
+After=network-online.target
+
+[Service]
+ExecStart=%h/.local/share/hisho/prometheus/prometheus \
+  --config.file=%h/.local/share/hisho/prometheus/prometheus.yml \
+  --storage.tsdb.path=%h/.local/share/hisho/prometheus/data \
+  --storage.tsdb.retention.time=@RETENTION@ \
+  --web.listen-address=127.0.0.1:@PORT@@LAN@
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

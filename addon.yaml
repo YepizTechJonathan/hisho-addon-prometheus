@@ -1,0 +1,66 @@
+# Prometheus: history and live numbers (CPU, RAM, disk, temperature) for every fleet machine.
+# Prometheus runs on the Core machine as a pinned binary under a user unit, listening on 127.0.0.1
+# (plus the LAN address in lan_address, if set, for Grafana) and published on the tailnet with
+# `tailscale serve`. Prometheus has no login: lan_address opens it to the whole LAN. Each fleet machine runs node_exporter (a user
+# unit, bound to its tailnet address only). The list of machines to scrape comes from Fleet.yaml:
+# Core rewrites Prometheus's target file on every fleet check, and installs node_exporter on a
+# machine that is on but has none (a newly adopted one). The parked reserve GPU worker (Hashira Ren)
+# is woken the way a job wakes it, gets node_exporter, and the idle sweep parks it again.
+# A machine that is off (no fresh heartbeat: Souko away, Ren parked, a box off for heat) shows grey,
+# never as an alert; maintenance holds its alerts too.
+# Undo: `hisho addon uninstall prometheus` (keeps the data); each machine's node_exporter has a
+# Remove button on the Prometheus page.
+name: prometheus
+kind: integration
+title: Prometheus
+description: Live and 30-day history of CPU, RAM, disk and temperature for every fleet machine, and its alerts.
+version: 0.1.1
+you_need:
+  - "Nothing beyond Hisho: it runs Prometheus on the Core machine and node_exporter on each fleet machine"
+  - "Optional: a Grafana, to link its dashboards"
+provider: provider.py
+
+options:
+  version: 3.13.4                  # LTS; bump with its sha256 from the release's sha256sums.txt
+  sha256: 87f21a66f96c597a189cef8d640e8921b621fc17a9feff707c332c4f3b3ddd56
+  exporter_version: 1.12.1
+  exporter_sha256: b51d8a76aa2a9156a55d501aca6276fae09e262259a5e4e831d2c2222f084e63
+  port: 9090                       # on 127.0.0.1 of the Core machine
+  https_port: 9443                 # tailscale serve, tailnet only
+  exporter_port: 9100              # node_exporter, on each machine's tailnet address
+  retention: 30d
+  auto_install: true               # put node_exporter on a fleet machine that is on but has none
+schema:
+  version: str
+  sha256: str
+  exporter_version: str
+  exporter_sha256: str
+  port: port
+  https_port: port
+  exporter_port: port
+  retention: str
+  auto_install: bool
+  site_url: url                    # e.g. https://<core>.<tailnet>.ts.net:9443
+  grafana_url: "url?"              # where your Grafana is, for a link on the page
+  grafana_dashboard: "str?"        # its dashboard for the fleet, named on the page (e.g. Hisho machines)
+  grafana_api: "url?"              # Grafana's own address (its direct port) to list dashboards, e.g. http://198.51.100.2:3000
+  grafana_token: "secret?"         # a Viewer service-account token's secret name, e.g. GRAFANA_HA_VIEWER_TOKEN
+  lan_address: "str?"              # also listen here (e.g. 198.51.100.220) so Grafana on the LAN can read it
+requires:
+  commands: [curl, tailscale, sha256sum]
+
+services:
+  - {unit: hisho-prometheus.service, label: Prometheus}
+
+checks:
+  - name: Prometheus answers
+    http: "http://127.0.0.1:{port}/-/ready"
+    from: host
+    expect: 200
+    explain: "Prometheus on the Core machine is not answering, so no machine numbers or history are being kept. Restart it on its card."
+
+links:
+  - {label: Open Prometheus, url: "{site_url}"}
+
+install: bin/install.sh
+uninstall: bin/uninstall.sh
