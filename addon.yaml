@@ -14,7 +14,7 @@ name: prometheus
 kind: integration
 title: Prometheus
 description: Live and 30-day history of CPU, RAM, disk and temperature for every fleet machine, and its alerts.
-version: 0.1.1
+version: 0.1.2
 you_need:
   - "Nothing beyond Hisho: it runs Prometheus on the Core machine and node_exporter on each fleet machine"
   - "Optional: a Grafana, to link its dashboards"

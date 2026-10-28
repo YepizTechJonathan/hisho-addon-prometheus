@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Publishes on the tailnet without sudo when the owner is Tailscale's operator (a fresh Souko).
+
 ## 0.1.1
 
 - README says what you need (addon.yaml you_need) and how to use it; the README check requires both.

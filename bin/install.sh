@@ -40,5 +40,7 @@ for i in $(seq 1 30); do
   sleep 2
 done
 curl -s -m 5 -o /dev/null -w "prometheus local: %{http_code}\n" "http://127.0.0.1:${HISHO_OPT_PORT}/-/ready"
-sudo -n tailscale serve --bg --https="${HISHO_OPT_HTTPS_PORT}" "http://127.0.0.1:${HISHO_OPT_PORT}" >/dev/null
+# The owner is Tailscale's operator on a Souko (no sudo); elsewhere it publishes with sudo.
+tailscale serve --bg --https="${HISHO_OPT_HTTPS_PORT}" "http://127.0.0.1:${HISHO_OPT_PORT}" >/dev/null 2>&1 \
+  || sudo -n tailscale serve --bg --https="${HISHO_OPT_HTTPS_PORT}" "http://127.0.0.1:${HISHO_OPT_PORT}" >/dev/null
 echo "published: ${HISHO_OPT_SITE_URL} (tailnet only)"
