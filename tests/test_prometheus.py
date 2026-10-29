@@ -20,3 +20,11 @@ def ctx_for(addon):
 def test_manifest_is_valid_and_readme_matches(addon):
     assert addons.validate_manifest(addon.manifest) == []
     assert addon_store.readme_problems(HERE) == []
+
+
+def test_install_finishes_without_a_site_url_and_hands_the_address_to_hisho():
+    """A fresh machine has no site_url: the install stopped on its very last line (set -u, 2026-10-29)."""
+    import re
+    install = (Path(__file__).resolve().parents[1] / "bin" / "install.sh").read_text()
+    assert re.findall(r"\$\{HISHO_OPT_SITE_URL[^}]*\}", install) == ["${HISHO_OPT_SITE_URL:-}"]
+    assert 'echo "HISHO_SET site_url=${site}"' in install

@@ -27,7 +27,7 @@ your Grafana and its dashboard.
   - `exporter_port` (port, default `9100`)
   - `retention` (str, default `30d`)
   - `auto_install` (bool, default `True`)
-  - `site_url` (url, required)
+  - `site_url` (url, optional)
   - `grafana_url` (url, optional)
   - `grafana_dashboard` (str, optional)
   - `grafana_api` (url, optional)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- Every field on its setup form says in plain words what it is, and links to where to get it (addon.yaml `help:`, shown by Hisho's dashboard).
+- Installs on a fresh machine: without a site_url its install stopped on its last line; now its address comes from this machine's tailnet name, Hisho keeps it in the settings (HISHO_SET site_url), and before Tailscale it runs on this machine only.
+- site_url is optional (filled in by the install).
+
 ## 0.1.2
 
 - Publishes on the tailnet without sudo when the owner is Tailscale's operator (a fresh Souko).

@@ -34,7 +34,7 @@ sed -e "s/@PORT@/${HISHO_OPT_PORT}/g" -e "s/@RETENTION@/${HISHO_OPT_RETENTION}/g
   units/hisho-prometheus.service > ~/.config/systemd/user/hisho-prometheus.service
 systemctl --user daemon-reload
 systemctl --user enable hisho-prometheus.service >/dev/null
-systemctl --user restart hisho-prometheus.service
+systemctl --user restart hisho-prometheus.service || { journalctl --user -u hisho-prometheus.service -n 15 --no-pager >&2; exit 1; }
 for i in $(seq 1 30); do
   curl -s -m 3 -o /dev/null "http://127.0.0.1:${HISHO_OPT_PORT}/-/ready" && break
   sleep 2
@@ -42,5 +42,14 @@ done
 curl -s -m 5 -o /dev/null -w "prometheus local: %{http_code}\n" "http://127.0.0.1:${HISHO_OPT_PORT}/-/ready"
 # The owner is Tailscale's operator on a Souko (no sudo); elsewhere it publishes with sudo.
 tailscale serve --bg --https="${HISHO_OPT_HTTPS_PORT}" "http://127.0.0.1:${HISHO_OPT_PORT}" >/dev/null 2>&1 \
-  || sudo -n tailscale serve --bg --https="${HISHO_OPT_HTTPS_PORT}" "http://127.0.0.1:${HISHO_OPT_PORT}" >/dev/null
-echo "published: ${HISHO_OPT_SITE_URL} (tailnet only)"
+  || sudo -n tailscale serve --bg --https="${HISHO_OPT_HTTPS_PORT}" "http://127.0.0.1:${HISHO_OPT_PORT}" >/dev/null 2>&1 \
+  || echo "not on the tailnet yet: Prometheus answers on this machine only (127.0.0.1:${HISHO_OPT_PORT})"
+# Its address: the setting, or this machine's tailnet name (a fresh Souko has nothing to type here). Hisho keeps it
+# in the add-on's settings (HISHO_SET: its link and the page use it). It stopped the install here when unset (2026-10-29).
+site="${HISHO_OPT_SITE_URL:-}"
+if [ -z "$site" ]; then
+  dns=$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))' 2>/dev/null || true)
+  [ -n "$dns" ] && site="https://${dns}:${HISHO_OPT_HTTPS_PORT}"
+fi
+if [ -n "$site" ]; then echo "published: ${site} (tailnet only)"; echo "HISHO_SET site_url=${site}"
+else echo "running on 127.0.0.1:${HISHO_OPT_PORT}; connect this machine to Tailscale to open it from your other devices"; fi

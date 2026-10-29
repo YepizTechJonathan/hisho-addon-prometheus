@@ -14,7 +14,7 @@ name: prometheus
 kind: integration
 title: Prometheus
 description: Live and 30-day history of CPU, RAM, disk and temperature for every fleet machine, and its alerts.
-version: 0.1.2
+version: 0.2.0
 you_need:
   - "Nothing beyond Hisho: it runs Prometheus on the Core machine and node_exporter on each fleet machine"
   - "Optional: a Grafana, to link its dashboards"
@@ -40,7 +40,7 @@ schema:
   exporter_port: port
   retention: str
   auto_install: bool
-  site_url: url                    # e.g. https://<core>.<tailnet>.ts.net:9443
+  site_url: "url?"                 # e.g. https://<core>.<tailnet>.ts.net:9443 (the install fills it in)
   grafana_url: "url?"              # where your Grafana is, for a link on the page
   grafana_dashboard: "str?"        # its dashboard for the fleet, named on the page (e.g. Hisho machines)
   grafana_api: "url?"              # Grafana's own address (its direct port) to list dashboards, e.g. http://198.51.100.2:3000
@@ -64,3 +64,61 @@ links:
 
 install: bin/install.sh
 uninstall: bin/uninstall.sh
+
+# Plain words for each setting (shown on the dashboard).
+help:
+  version:
+    label: Prometheus version
+    say: "Which Prometheus release runs. Leave it as it is: Hisho keeps a tested one. To change it, also change the checksum below to match."
+    get: "https://github.com/prometheus/prometheus/releases"
+    get_label: See Prometheus releases
+  sha256:
+    label: Prometheus checksum
+    say: "A fingerprint that proves the Prometheus download is the real one. Leave it as it is. If you change the version, copy the linux-amd64 line from that release's sha256sums.txt."
+    get: "https://github.com/prometheus/prometheus/releases"
+    get_label: Find the checksum
+  exporter_version:
+    label: Machine reporter version
+    say: "Which release of node_exporter (the small program on each machine that reports its numbers) runs. Leave it as it is. To change it, also change its checksum below."
+    get: "https://github.com/prometheus/node_exporter/releases"
+    get_label: See node_exporter releases
+  exporter_sha256:
+    label: Machine reporter checksum
+    say: "A fingerprint that proves the node_exporter download is the real one. Leave it as it is. If you change its version, copy the linux-amd64 line from that release's sha256sums.txt."
+    get: "https://github.com/prometheus/node_exporter/releases"
+    get_label: Find the checksum
+  port:
+    label: Local port
+    say: "The port Prometheus listens on inside the Core machine. Leave it as it is unless another program already uses it."
+  https_port:
+    label: Tailnet port
+    say: "The port your devices on the tailnet open Prometheus at (with https). Leave it as it is unless another service already uses it."
+  exporter_port:
+    label: Machine reporter port
+    say: "The port node_exporter uses on each machine. Leave it as it is unless another program already uses it."
+  retention:
+    label: Keep history for
+    say: "How long the numbers are kept, like 30d for 30 days or 90d. Longer uses more disk on the Core machine."
+  auto_install:
+    label: Set up new machines by itself
+    say: "On: when a fleet machine is on but has no node_exporter yet, Hisho installs it there. Off: you install it yourself from the Prometheus page."
+  site_url:
+    label: Prometheus address
+    say: "The web address you open Prometheus at on the tailnet, like https://core.example.ts.net:9443 (this machine's tailnet name and the tailnet port)."
+  grafana_url:
+    label: Grafana address (optional)
+    say: "If you use Grafana: the address you open it at, like https://grafana.example.com. The Prometheus page links to it."
+  grafana_dashboard:
+    label: Grafana dashboard name (optional)
+    say: "The name of your Grafana dashboard for these machines, like Hisho machines. Shown next to the Grafana link."
+  grafana_api:
+    label: Grafana direct address (optional)
+    say: "Grafana's own address with its port, like http://198.51.100.2:3000, so Hisho can list your dashboards on the page. Needs the token below."
+  grafana_token:
+    label: Grafana token (optional)
+    say: "The name of a saved secret that holds a Grafana service account token with the Viewer role, like GRAFANA_VIEWER_TOKEN. In Grafana: Administration > Service accounts."
+    get: "{grafana_api}/org/serviceaccounts"
+    get_label: Make a token in Grafana
+  lan_address:
+    label: Also open on the local network (optional)
+    say: "An address of the Core machine on your local network, like 192.0.2.220, so a Grafana there can read Prometheus. Prometheus has no login, so everyone on that network can see it. Leave empty to keep it on the tailnet only."
