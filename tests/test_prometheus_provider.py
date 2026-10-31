@@ -176,3 +176,11 @@ def test_note_installed_from_many_threads_keeps_every_machine(tmp_path):
     [t.start() for t in ts]
     [t.join() for t in ts]
     assert len(pm.installed(path)) == 20
+
+
+def test_disks_plugged_in_under_media_never_count_as_almost_full():
+    from pathlib import Path
+    import yaml
+    rules = yaml.safe_load((Path(__file__).parent.parent / "rules.yml").read_text())
+    expr = next(r["expr"] for g in rules["groups"] for r in g["rules"] if r["alert"] == "DiskAlmostFull")
+    assert expr.count('mountpoint!~"/run/media/.*|/media/.*"') == 2

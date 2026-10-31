@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- No "almost full" for disks mounted under /run/media or /media (USB sticks, disk images being tested): they are not the machine's own.
+
 ## 0.2.0
 
 - Every field on its setup form says in plain words what it is, and links to where to get it (addon.yaml `help:`, shown by Hisho's dashboard).

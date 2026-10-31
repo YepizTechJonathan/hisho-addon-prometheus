@@ -1,13 +1,14 @@
 # Alerts Hisho shows (and pushes) from Prometheus. There is deliberately no "target down" rule:
 # a machine that is off is normal here (Souko travels, Ren parks, boxes go off for heat). Hisho
-# tells "off" from "on but not reporting" with its own heartbeats instead.
+# tells "off" from "on but not reporting" with its own heartbeats instead. Disks plugged in for a while
+# (/run/media, /media: USB sticks, disk images being tested) are not the machine's own: no "almost full".
 groups:
   - name: hisho
     rules:
       - alert: DiskAlmostFull
         expr: |
-          100 * (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*"}
-                     / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*"}) > 90
+          100 * (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*",mountpoint!~"/run/media/.*|/media/.*"}
+                     / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*",mountpoint!~"/run/media/.*|/media/.*"}) > 90
         for: 15m
         labels: {severity: warn}
         annotations:

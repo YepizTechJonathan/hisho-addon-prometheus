@@ -23,7 +23,7 @@ _woke: dict[str, float] = {}
 _lock = threading.Lock()   # installs run in threads; exporters.json is read-modify-write
 NAMES = {"DiskAlmostFull": "{mountpoint} almost full", "LowMemory": "low on memory",
          "HighTemperature": "CPU running hot", "SSDHot": "SSD running hot"}
-REAL_FS = 'fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*"'
+REAL_FS = 'fstype!~"tmpfs|overlay|squashfs|ramfs|devtmpfs|efivarfs|fuse.*",mountpoint!~"/run/media/.*|/media/.*"'
 QUERIES = {
     "cpu": '100 * (1 - avg by (machine) (rate(node_cpu_seconds_total{job="node",mode="idle"}[2m])))',
     "ram": '100 * (1 - node_memory_MemAvailable_bytes{job="node"} / node_memory_MemTotal_bytes{job="node"})',
